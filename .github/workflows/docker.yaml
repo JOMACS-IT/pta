@@ -13,6 +13,9 @@ jobs:
     - name: Docker Build 
       run: docker build -t docker.io/efotsowoe/resume-app:latest .
 
+    - name: List Docker Images
+      run: docker images
+
     - name: Docker Login
       run: docker login --username=efotsowoe --password=ricewater!!233
 
