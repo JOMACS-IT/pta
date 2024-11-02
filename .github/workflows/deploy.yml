@@ -25,22 +25,20 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y openssh-client
-      
+
+      - name: Start SSH Agent
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Test SSH Connection
+        run: |
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }} 'echo SSH Connection Successful'
+
       - name: Copy Files to EC2 Instance
-        env:
-          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
-          printf "%s" "$SSH_KEY" > key.pem
-          chmod 400 key.pem
-          scp -o StrictHostKeyChecking=no -i key.pem -r ./ ec2-user@${{ secrets.EC2_PUBLIC_IP }}:/var/www/html
-      
+          scp -o StrictHostKeyChecking=no -r ./ ec2-user@${{ secrets.EC2_PUBLIC_IP }}:/var/www/html
+
       - name: Restart Web Server on EC2 Instance
-        env:
-          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.EC2_PUBLIC_IP }} 'sudo systemctl restart httpd'
-      
-      - name: Clean Up SSH Key
-        run: |
-          rm -f key.pem
-      
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }} 'sudo systemctl restart httpd'
