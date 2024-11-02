@@ -1,4 +1,4 @@
-name: Deploy Resume to EC2
+name: Push-to-EC2
 
 on:
   push:
@@ -11,38 +11,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout the files
+        uses: actions/checkout@v4
 
-    - name: Archive application files
-      run: zip -r app.zip Readme.md ascii-script.sh css/ dockerfile images/ index.html js/
+      - name: Deploy to Server
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.HOST_DNS }}
+          REMOTE_USER: ${{ secrets.EC2_USER }}
+          TARGET: ${{ secrets.TARGET_DIR }}
 
-    - name: Upload to EC2
-      uses: appleboy/scp-action@v0.1.3
-      with:
-        host: ${{ secrets.EC2_PUBLIC_IP }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        source: "app.zip"
-        target: "~/"
-
-    - name: SSH into EC2 and deploy
-      uses: appleboy/ssh-action@v0.1.5
-      with:
-        host: ${{ secrets.EC2_PUBLIC_IP }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          # Unzip the application files
-          unzip -o ~/app.zip -d ~/resume_app
-
-          # Install necessary packages
-          sudo apt-get update
-          sudo apt-get install -y python3 python3-pip
-
-          # Start the application
-          cd ~/resume_app
-          nohup python3 -m http.server 80 &
-
-          # Clean up
-          rm ~/app.zip
+      - name: Executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_DNS }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo apt-get -y update
+            sudo apt-get install -y apache2
+            sudo systemctl start apache2
+            sudo systemctl enable apache2
+            cd home
+            sudo mv * /var/www/html
