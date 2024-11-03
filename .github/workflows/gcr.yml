@@ -36,4 +36,6 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}  
 
     - name: Publish code to GHCR
-      run: docker push ghcr.io/efotsowoe/resume-app:latest
+      run: |
+        docker build -t ghcr.io/efotsowoe/resume-app:latest .
+        docker push ghcr.io/efotsowoe/resume-app:latest
