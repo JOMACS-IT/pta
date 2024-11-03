@@ -34,6 +34,6 @@ jobs:
         registry: ghcr.io
         username: ${{ github.repository_owner }}  
         password: ${{ secrets.GITHUB_TOKEN }}  
-        
+
     - name: Publish code to GHCR
-      run: docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+      run: docker push ghcr.io/Efotsowoe/resume-app:latest
